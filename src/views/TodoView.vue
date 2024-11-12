@@ -1,11 +1,11 @@
 <script>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 export default {
   setup() {
-    const dataTodo = ref({
+    const dataToDo = ref({
       title: '',
-      ToDo: '',
+      todo: '',
       date: '',
       time: '',
       priority: 'deferred',
@@ -14,31 +14,33 @@ export default {
 
     const savedDataArray = ref([])
     const editIndex = ref(null)
+    const searchQuery = ref('');
+
 
     const addItem = () => {
-        const TodoData = JSON.parse(localStorage.getItem('ArrayToDos')) || []
+        const toDoData = JSON.parse(localStorage.getItem('ArrayToDos')) || []
         if (editIndex.value !== null) {
-            TodoData[editIndex.value] = { ...dataTodo.value }
+            toDoData[editIndex.value] = { ...dataToDo.value }
             editIndex.value = null
         } else {
-            TodoData.unshift({ ...dataTodo.value })
+            toDoData.unshift({ ...dataToDo.value })
         }
-        localStorage.setItem('ArrayToDos', JSON.stringify(TodoData))
-        savedDataArray.value = TodoData
-        dataTodo.value = { title: '', ToDo: '', date: '', time: '', priority: 'deferred', category: '' }
+        localStorage.setItem('ArrayToDos', JSON.stringify(toDoData))
+        savedDataArray.value = toDoData
+        dataToDo.value = { title: '', todo: '', date: '', time: '', priority: 'deferred', category: '' }
 
     }
 
     const editItem = (index) => {
-        dataTodo.value = { ...savedDataArray.value[index] }
+        dataToDo.value = { ...savedDataArray.value[index] }
         editIndex.value = index
     }
 
     const deleteItem = (index) => {
-        const TodoData = JSON.parse(localStorage.getItem('ArrayToDos')) || []
-        TodoData.splice(index, 1)
-        localStorage.setItem('ArrayToDos', JSON.stringify(TodoData))
-        savedDataArray.value = TodoData
+        const toDoData = JSON.parse(localStorage.getItem('ArrayToDos')) || []
+        toDoData.splice(index, 1)
+        localStorage.setItem('ArrayToDos', JSON.stringify(toDoData))
+        savedDataArray.value = toDoData
     }
 
     if (localStorage.getItem('ArrayToDos')) {
@@ -63,14 +65,23 @@ export default {
       }
     };
 
+    const filteredToDo = computed(() => {
+        return savedDataArray.value.filter((toDoFilter) => 
+            toDoFilter.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+            toDoFilter.todo.toLowerCase().includes(searchQuery.value.toLowerCase()) 
+        )
+    })
+
     return {
-        dataTodo,
+        dataToDo,
         savedDataArray,
+        searchQuery,
         addItem,
         editItem,
         deleteItem,
         truncatedToDo,
         getPriorityClass,
+        filteredToDo
     }
   },
 }
@@ -81,30 +92,30 @@ export default {
         <form @submit.prevent="addItem">
             <div class="my-6">
                 <label for="title" class="block mb-2 text-sm font-medium text-gray-900">Title</label>
-                <input type="text" id="title" v-model="dataTodo.title" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5" required>
+                <input type="text" id="title" v-model="dataToDo.title" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5" placeholder="Tomorrow Activity" required>
             </div>
             <div class="mb-6">
-                <label for="ToDo" class="block mb-2 text-sm font-medium text-gray-900">To Do</label>
-                <textarea type="text" id="ToDo" v-model="dataTodo.ToDo" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5"></textarea>
+                <label for="todo" class="block mb-2 text-sm font-medium text-gray-900">To Do</label>
+                <textarea type="text" id="todo" v-model="dataToDo.todo" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5" placeholder="Wake Up at 4 AM"></textarea>
             </div>
             <div class="grid gap-x-6 mb-6 grid-cols-2">
-                <label for="date" class="block mb-2 text-sm font-medium text-gray-900">Date (optional)</label>
-                <label for="time" class="block mb-2 text-sm font-medium text-gray-900">Time (optional)</label>
+                <label for="date" class="block mb-2 text-sm font-medium text-gray-900">Date (Optional)</label>
+                <label for="time" class="block mb-2 text-sm font-medium text-gray-900">Time (Optional)</label>
                 <div>
-                    <input id="date" type="date" v-model="dataTodo.date" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5" placeholder="John" />
+                    <input id="date" type="date" v-model="dataToDo.date" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5" placeholder="John" />
                 </div>
                 <div>
-                    <input id="time" type="time" v-model="dataTodo.time" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5 "/>
+                    <input id="time" type="time" v-model="dataToDo.time" class="bg-gray-50 border border-gray-500 text-gray-900 text-sm rounded-lg block w-full p-2.5 "/>
                 </div>
             </div>
             <div class="mb-6">
-                <label class="block mb-2 text-sm font-medium text-gray-900">Priority</label>
+                <label class="block mb-2 text-sm font-medium text-gray-900">Priority (Deferred as Default)</label>
                 <div class="grid grid-cols-3 gap-6">
-                    <input type="radio" id="important" v-model="dataTodo.priority" name="priority." value="important" class="hidden peer/important justify-center">
+                    <input type="radio" id="important" v-model="dataToDo.priority" name="priority." value="important" class="hidden peer/important justify-center">
                     <label for="important" class="peer-checked/important:text-white peer-checked/important:bg-red-500 border rounded-lg border-gray-500 block w-full p-2.5 font-medium text-center">Important</label>
-                    <input type="radio" id="urgent" v-model="dataTodo.priority" name="priority." value="urgent" class="hidden peer/urgent">
+                    <input type="radio" id="urgent" v-model="dataToDo.priority" name="priority." value="urgent" class="hidden peer/urgent">
                     <label for="urgent" class="peer-checked/urgent:text-white peer-checked/urgent:bg-yellow-500 border rounded-lg border-gray-500 block w-full p-2.5 font-medium text-center">Urgent</label>
-                    <input type="radio" id="deferred" v-model="dataTodo.priority" name="priority." value="deferred" class="hidden peer/deferred" checked>
+                    <input type="radio" id="deferred" v-model="dataToDo.priority" name="priority." value="deferred" class="hidden peer/deferred" checked>
                     <label for="deferred" class="peer-checked/deferred:text-white peer-checked/deferred:bg-green-500 border rounded-lg border-gray-500 block w-full p-2.5 font-medium text-center">Deferred</label>
                 </div>
             </div>
@@ -113,15 +124,19 @@ export default {
             </button>
         </form>
     </div>
-    <div class="max-w-4xl mx-auto justify-center mt-6 flex flex-wrap gap-6">
-        <div v-for="(data, index) in savedDataArray" :key="index" class="border border-gray-500 rounded-lg p-2.5 inline-block w-fit h-fit max-w-md">
+    <div class="max-w-xl mx-auto flex flex-col justify-center mt-6">
+        <label for="searchbox" class="block mb-2 text-sm font-medium text-gray-900">Search To Do</label>
+        <input v-model="searchQuery" id="searchbox" type="text" placeholder="Search by Title or contents of To Do" class="border border-gray-500 rounded-lg p-2.5 text-gray-900"/>
+    </div>
+    <div class="max-w-4xl mx-auto justify-center mt-6 flex flex-wrap gap-6">   
+        <div v-for="(data, index) in filteredToDo" :key="index" class="border border-gray-500 rounded-lg p-2.5 inline-block w-fit h-fit max-w-md">
             <p class="mb-2 capitalize font-bold text-xl">{{ data.title }}<span class="font-thin ml-2" :class="getPriorityClass(data.priority)">{{ data.priority }}</span></p>
             <div class="grid grid-cols-2 mb-2">
                 <p>Date: {{ data.date || '-' }} </p>
                 <p>Time: {{ data.time || '-' }}</p>
             </div>
             <div class="bg-gray-200 p-2.5 rounded-lg mb-2">
-                <p>{{ truncatedToDo(data.ToDo) }}</p>
+                <p>{{ truncatedToDo(data.todo) }}</p>
             </div>
             <div class="flex justify-end gap-3">
                 <button @click="editItem(index)" class="border text-yellow-500 hover:bg-yellow-500 hover:text-white font-medium text-center px-2.5 py-1.5 rounded-lg">edit</button>
