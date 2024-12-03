@@ -1,35 +1,24 @@
-<script>
+<script setup>
 import { ref } from 'vue'
 
-export default {
-    setup() {
-        const formData = ref({
-            title: '',
-            note: ''
-        });
+const formData = ref({
+    title: '',
+    note: ''
+});
 
-        const savedDataArray = ref([]);
+const savedDataArray = ref([]);
 
-        const addDataToLocalStorage = () => {
-            const currentData = JSON.parse(localStorage.getItem('ArrayNotes')) || [];
-            currentData.push({ ...formData.value });
-            localStorage.setItem('ArrayNotes', JSON.stringify(currentData));
-            savedDataArray.value = currentData;
-            formData.value = { title: '', note: '' };
-        };
+const addDataToLocalStorage = () => {
+    const currentData = JSON.parse(localStorage.getItem('ArrayNotes')) || [];
+    currentData.push({ ...formData.value });
+    localStorage.setItem('ArrayNotes', JSON.stringify(currentData));
+    savedDataArray.value = currentData;
+    formData.value = { title: '', note: '' };
+};
 
-        if (localStorage.getItem('ArrayNotes')) {
-            savedDataArray.value = JSON.parse(localStorage.getItem('ArrayNotes'));
-        }
-
-        return {
-            formData,
-            addDataToLocalStorage,
-            savedDataArray
-        };
-    }
+if (localStorage.getItem('ArrayNotes')) {
+    savedDataArray.value = JSON.parse(localStorage.getItem('ArrayNotes'));
 }
-
 </script>
 
 <template>
